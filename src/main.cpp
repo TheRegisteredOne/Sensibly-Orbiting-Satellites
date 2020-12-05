@@ -3,6 +3,9 @@
 static float rX = 0.0;
 static float rY = 0.0;
 static float rZ = 0.0;
+static int phaseLengthMasser = 3;
+static int phaseLengthSecunda = 3;
+static bool overridePhaseLength = false;
 
 static std::vector<std::string> masserPhases;
 static std::vector<std::string> secundaPhases;
@@ -52,7 +55,9 @@ bool ReadINI()
 	rY = static_cast<float>(ini.GetDoubleValue("Rotation", "Y", 0.0));
 	rZ = static_cast<float>(ini.GetDoubleValue("Rotation", "Z", 0.0));
 
-	dumpStats = ini.GetBoolValue("Settings", "Debug Info", false);
+	overridePhaseLength = ini.GetBoolValue("Phase Length", "Override Phase Length", false);
+	phaseLengthMasser = ini.GetIntValue("Phase Length", "Masser Phase Length", 3);
+	phaseLengthSecunda = ini.GetIntValue("Phase Length", "Secunda Phase Length", 3);
 
 	GetMoonPhases(ini, masserPhases, "Masser Phases");
 	GetMoonPhases(ini, secundaPhases, "Secunda Phases");
@@ -103,21 +108,25 @@ public:
 private:
 	static bool GetMoonPhase(RE::Sky* a_sky)
 	{
-		using PhaseLength = RE::TESClimate::Timing::MoonPhaseLength;
+		if !overridePhaseLength {
+			using PhaseLength = RE::TESClimate::Timing::MoonPhaseLength;
 
-		auto climate = a_sky->currentClimate;
-		if (!climate) {
-			return false;
-		}
+			auto climate = a_sky->currentClimate;
+			if (!climate) {
+				return false;
+			}
 
-		auto phaseLength = to_underlying(*climate->timing.moonPhaseLength);
-		if (!(phaseLength & 63)) {
-			return false;
+			auto climatePhaseLength = to_underlying(*climate->timing.moonPhaseLength);
+			if (!(climatePhaseLength & 63)) {
+				return false;
+			}
+			phaseLengthMasser = (climatePhaseLength & 63);
+			phaseLengthSecunda = (climatePhaseLength & 63);
 		}
 
 		auto daysPassed = static_cast<std::uint32_t>(RE::Calendar::GetSingleton()->GetDaysPassed());
-		std::uint32_t masserPhase = daysPassed % (masserPhases.size() * (phaseLength & 63)) / (phaseLength & 63);
-		std::uint32_t secundaPhase = daysPassed % (secundaPhases.size() * (phaseLength & 63)) / (phaseLength & 63);
+		std::uint32_t masserPhase = daysPassed % (masserPhases.size() * phaseLengthMasser) / phaseLengthMasser;
+		std::uint32_t secundaPhase = daysPassed % (secundaPhases.size() * phaseLengthSecunda) / phaseLengthSecunda;
 
 		if (masserPhase == curMasserPhase && secundaPhase == curSecundaPhase) {
 			return false;
