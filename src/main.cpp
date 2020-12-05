@@ -61,6 +61,8 @@ bool ReadINI()
 
 	GetMoonPhases(ini, masserPhases, "Masser Phases");
 	GetMoonPhases(ini, secundaPhases, "Secunda Phases");
+	
+	dumpStats = ini.GetBoolValue("Settings", "Debug Info", false);
 
 	return true;
 }
