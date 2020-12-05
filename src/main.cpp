@@ -59,10 +59,10 @@ bool ReadINI()
 	phaseLengthMasser = ini.GetIntValue("Phase Length", "Masser Phase Length", 3);
 	phaseLengthSecunda = ini.GetIntValue("Phase Length", "Secunda Phase Length", 3);
 
+	dumpStats = ini.GetBoolValue("Settings", "Debug Info", false);
+
 	GetMoonPhases(ini, masserPhases, "Masser Phases");
 	GetMoonPhases(ini, secundaPhases, "Secunda Phases");
-	
-	dumpStats = ini.GetBoolValue("Settings", "Debug Info", false);
 
 	return true;
 }
